@@ -25,7 +25,8 @@ void main() {
   bytes are never equal, so an object's id cannot stand in for some other
   hash that happens to share its bytes. It is `base`, so a kind cannot
   `implement` it and skip the check that a name is 32 bytes.
-- **`sha256`**: as FIPS 180-4 defines it, in about seventy lines.
+- **`sha256`**: as FIPS 180-4 defines it: one 64-line function, plus its
+  round constants.
 
 Classes, not extension types, since a `String` can be cast to an extension
 type and skip every check.
