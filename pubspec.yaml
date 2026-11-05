@@ -1,0 +1,13 @@
+name: is_content_id
+description: >-
+  Content addresses: names made by hashing bytes with sha256, as types, and
+  the sha256 they are made with. No dependencies, and no dart:io.
+version: 0.1.0
+repository: https://github.com/intersyntactic/content_id
+
+environment:
+  sdk: ^3.13.0
+
+dev_dependencies:
+  lints: ^6.1.0
+  test: ^1.33.0
