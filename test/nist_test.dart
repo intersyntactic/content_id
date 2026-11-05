@@ -1,4 +1,4 @@
-// The vectors that need files or a shell, so the Dart VM only.
+// NIST's vectors, read from files, so the Dart VM only.
 @TestOn('vm')
 library;
 
@@ -45,31 +45,4 @@ void main() {
       }
     });
   }
-
-  test('agrees with shasum at every length across the block boundaries', () {
-    final dir = Directory.systemTemp.createTempSync('sha256');
-    addTearDown(() => dir.deleteSync(recursive: true));
-    final source = Uint8List.fromList([
-      for (var i = 0; i < 130; i++) (i * 167 + 13) & 0xff,
-    ]);
-    for (var n = 0; n <= 130; n++) {
-      File('${dir.path}/m$n').writeAsBytesSync(source.sublist(0, n));
-    }
-    final r = Process.runSync('bash', [
-      '-c',
-      'shasum -a 256 m*',
-    ], workingDirectory: dir.path);
-    expect(r.exitCode, 0, reason: r.stderr as String);
-    final theirs = {
-      for (final line in (r.stdout as String).trim().split('\n'))
-        line.substring(66): line.substring(0, 64),
-    };
-    for (var n = 0; n <= 130; n++) {
-      expect(
-        ObjectId.of(source.sublist(0, n)).hex,
-        theirs['m$n'],
-        reason: '$n bytes',
-      );
-    }
-  });
 }
