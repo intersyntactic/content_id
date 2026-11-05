@@ -5,8 +5,9 @@
 /// [ObjectId.parse] from hex or [ObjectId.fromDigest] from its 32 bytes. So
 /// code holding one never asks whether it is well formed. Other kinds of
 /// name extend [Sha256Name], and two kinds with the same bytes are never
-/// equal. Classes, not extension types, since a `String` can be cast to an
-/// extension type and skip every check.
+/// equal while each keeps the `==` it inherits. Classes, not extension
+/// types, since a `String` can be cast to an extension type and skip every
+/// check.
 ///
 /// The [sha256] every name is made with is here too, as FIPS 180-4 defines
 /// it. This package imports only `dart:typed_data` and touches no file, so
@@ -52,7 +53,9 @@ abstract base class Sha256Name {
     ],
   ]);
 
-  /// Equal only to the same kind of name with the same bytes.
+  /// Equal only to the same kind of name with the same bytes. A kind must
+  /// not override this or [hashCode]: `base` cannot stop it, and equality
+  /// between two kinds would then depend on which one is asked.
   @override
   bool operator ==(Object other) {
     if (other is! Sha256Name || other.runtimeType != runtimeType) return false;
@@ -62,8 +65,12 @@ abstract base class Sha256Name {
     return true;
   }
 
+  /// Worked out once. All the bytes, not just the first few, though they
+  /// look random: a name read back from text or bytes has whatever bytes its
+  /// sender chose, and [Object.hashAll]'s seed changes with each run, so
+  /// names cannot be chosen to share a bucket.
   @override
-  int get hashCode => Object.hashAll(_bytes);
+  late final int hashCode = Object.hashAll(_bytes);
 
   @override
   String toString() => hex;

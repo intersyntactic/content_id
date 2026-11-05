@@ -99,6 +99,12 @@ void main() {
       expect(ObjectId.fromDigest(digest), ObjectId.of(ascii('x')));
     });
 
+    test('a name made two ways is the same key in a set', () {
+      final id = ObjectId.of(ascii('x'));
+      expect(ObjectId.parse(id.hex)!.hashCode, id.hashCode);
+      expect({id}.contains(ObjectId.fromDigest(id.bytes)), isTrue);
+    });
+
     test('a name keeps its own copy of the bytes', () {
       final digest = sha256(ascii('x'));
       final id = ObjectId.fromDigest(digest)!;
