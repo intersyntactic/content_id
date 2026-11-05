@@ -5,9 +5,9 @@
 /// [ObjectId.parse] from hex or [ObjectId.fromDigest] from its 32 bytes. So
 /// code holding one never asks whether it is well formed. Other kinds of
 /// name extend [Sha256Name], and two kinds with the same bytes are never
-/// equal while each keeps the `==` it inherits. Classes, not extension
-/// types, since a `String` can be cast to an extension type and skip every
-/// check.
+/// equal while each keeps the `==`, `hashCode` and `runtimeType` it
+/// inherits. Classes, not extension types, since a `String` can be cast to
+/// an extension type and skip every check.
 ///
 /// The [sha256] every name is made with is here too, as FIPS 180-4 defines
 /// it. This package imports only `dart:typed_data` and touches no file, so
@@ -53,9 +53,12 @@ abstract base class Sha256Name {
     ],
   ]);
 
-  /// Equal only to the same kind of name with the same bytes. A kind must
-  /// not override this or [hashCode]: `base` cannot stop it, and equality
-  /// between two kinds would then depend on which one is asked.
+  /// Equal only to the same kind of name with the same bytes, where the
+  /// kind is [runtimeType]. `base` cannot stop a kind overriding any of
+  /// these, so a kind must not: overriding this makes equality between two
+  /// kinds depend on which one is asked, overriding [hashCode] puts equal
+  /// names in different buckets so a set or map misses them, and overriding
+  /// [runtimeType] lets one kind pass as another.
   @override
   bool operator ==(Object other) {
     if (other is! Sha256Name || other.runtimeType != runtimeType) return false;
@@ -67,8 +70,9 @@ abstract base class Sha256Name {
 
   /// Worked out once. All the bytes, not just the first few, though they
   /// look random: a name read back from text or bytes has whatever bytes its
-  /// sender chose, and [Object.hashAll]'s seed changes with each run, so
-  /// names cannot be chosen to share a bucket.
+  /// sender chose. [Object.hashAll]'s seed changes with each run, which
+  /// makes such names hard to aim at one bucket, though it is not a
+  /// cryptographic hash.
   @override
   late final int hashCode = Object.hashAll(_bytes);
 

@@ -56,7 +56,7 @@ void main() {
       }
     });
 
-    test('agrees with shasum at every length across the block boundaries', () {
+    test("gives shasum's digest at every length across block boundaries", () {
       final source = Uint8List.fromList([
         for (var i = 0; i < 130; i++) (i * 167 + 13) & 0xff,
       ]);
@@ -224,10 +224,14 @@ const monteDigests = [
 ];
 
 /// The sha256 of the first n bytes of `(i * 167 + 13) & 0xff`, for n from 0
-/// to 130.
-/// Made by `shasum -a 256` rather than typed, and checked against Python's
-/// `hashlib`. They cross the block boundaries: 55 bytes pad to one block,
-/// 56 to two, 119 to two and 120 to three.
+/// to 130. They cross the block boundaries: 55 bytes pad to one block, 56 to
+/// two, 119 to two and 120 to three. Made by `shasum` rather than typed, and
+/// checked against Python's `hashlib`. To make them again:
+///
+/// ```sh
+/// python3 -c 's = bytes((i * 167 + 13) & 0xff for i in range(130)); [open(f"m{n}", "wb").write(s[:n]) for n in range(131)]'
+/// for n in $(seq 0 130); do shasum -a 256 m$n | cut -c1-64; done
+/// ```
 const shasumDigests = [
   'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855',
   '9d1e0e2d9459d06523ad13e28a4093c2316baafe7aec5b25f30eba2e113599c4',
