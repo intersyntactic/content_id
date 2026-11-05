@@ -23,10 +23,9 @@ void main() {
   well formed.
 - **`Sha256Name`**: what every kind of name extends. Two kinds with the same
   bytes are never equal, so an object's id cannot stand in for some other
-  hash that happens to share its bytes, as long as no kind overrides `==`,
-  `hashCode` or `runtimeType`: Dart cannot stop a subclass doing that. It is
-  `base`, so a kind cannot `implement` it and skip the check that a name is
-  32 bytes.
+  hash that happens to share its bytes, as long as no kind overrides `==` or
+  `runtimeType`: Dart cannot stop a subclass doing that. It is `base`, so a
+  kind cannot `implement` it and skip the check that a name is 32 bytes.
 - **`sha256`**: as FIPS 180-4 defines it: one 64-line function, plus its
   round constants.
 
