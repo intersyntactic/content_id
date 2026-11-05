@@ -34,10 +34,10 @@ type and skip every check.
 ## How the sha256 is checked
 
 `dart test -p vm,node` runs it on the Dart VM and as JavaScript. On both, it
-gives the FIPS 180-4 examples and passes NIST's Monte Carlo test: 100 steps of
-1,000 chained hashes. On the VM it also gives every digest in NIST's
-validation vectors (65 short and 64 long messages, in `test/vectors`), and
-agrees with `shasum` at every length from 0 to 130 bytes.
+gives the FIPS 180-4 examples, passes NIST's Monte Carlo test (100 steps of
+1,000 chained hashes), and agrees with `shasum` at every length from 0 to 130
+bytes. On the VM it also gives every digest in NIST's validation vectors (65
+short and 64 long messages, in `test/vectors`).
 
 ## What it imports
 
