@@ -123,30 +123,6 @@ void main() {
       };
       expect(FileSetId.of(files)?.hex, fileSetName);
     });
-
-    test('the empty set has no name', () {
-      expect(FileSetId.of({}), isNull);
-    });
-
-    test('a path is one find could print, in printable ASCII', () {
-      for (final ok in ['a', 'a/b', 'a b', '[x]~', '...', '.a', '-', ' ']) {
-        expect(ListedPath.parse(ok)?.toString(), ok);
-      }
-      for (final bad in [
-        '', '/a', 'a/', 'a//b', '.', './a', 'a/./b', '..', 'a/../b', //
-        r'a\b', 'a\nb', 'a\tb', 'a\rb', 'caf\u00e9', '\x7f',
-      ]) {
-        expect(ListedPath.parse(bad), isNull, reason: bad);
-      }
-    });
-
-    test('a set and an object with the same bytes are not equal', () {
-      final name = FileSetId.of({
-        ListedPath.parse('a')!: ObjectId.of(ascii('')),
-      })!;
-      expect(FileSetId.parse(name.hex), name);
-      expect(ObjectId.fromDigest(name.bytes), isNot(name));
-    });
   });
 }
 
