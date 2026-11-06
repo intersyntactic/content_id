@@ -21,6 +21,22 @@ void main() {
   `ObjectId.of` (hash these bytes), `ObjectId.parse` (from lower-case hex) or
   `ObjectId.fromDigest` (from the 32 bytes), so a value of the type is always
   well formed.
+- **`FileSetId`**: the name of a set of files, each a `ListedPath` and the
+  `ObjectId` of its bytes: the sha256 of the listing `shasum -a 256` prints
+  for them, in byte order of path. So a person can check it with no Dart,
+  from the set's root:
+
+  ```sh
+  find . -type f -print0 | LC_ALL=C sort -z |
+    xargs -0 shasum -a 256 | shasum -a 256
+  ```
+
+  The files are a map from path to id, so a path is in a set once. Which
+  files are in it is the caller's to say; this reads none. The empty set has
+  no name, since that recipe gives it a different one on macOS and on Linux.
+- **`ListedPath`**: a path `find` could print, from the set's root and
+  without the `./`, in printable ASCII with no backslash. Made only by
+  `ListedPath.parse`, which gives null for anything else.
 - **`Sha256Name`**: what every kind of name extends. Two kinds with the same
   bytes are never equal, so an object's id cannot stand in for some other
   hash that happens to share its bytes, as long as no kind overrides `==` or
@@ -39,6 +55,10 @@ gives the FIPS 180-4 examples, passes NIST's Monte Carlo test (100 steps of
 1,000 chained hashes), and gives `shasum`'s digest at every length from 0 to
 130 bytes. On the VM it also gives every digest in NIST's validation vectors
 (65 short and 64 long messages, in `test/vectors`).
+
+A `FileSetId` is checked against the name the recipe above gives a set of
+eight files whose paths sort differently in byte order than in a locale's.
+That name was made by the shell, the same on macOS and on Linux.
 
 ## What it imports
 
