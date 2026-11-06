@@ -113,7 +113,54 @@ void main() {
       expect(() => id.bytes[0] = 0, throwsUnsupportedError);
     });
   });
+
+  group('file sets', () {
+    test('a set has the name the shell recipe gives it', () {
+      // Out of order, so the sort is what puts them in order.
+      final files = {
+        for (final (path, bytes) in fileSet.reversed)
+          ListedPath.parse(path)!: ObjectId.of(ascii(bytes)),
+      };
+      expect(FileSetId.of(files)?.hex, fileSetName);
+    });
+  });
 }
+
+/// The files in [fileSetName]'s set, each a path and its bytes, in the order
+/// `LC_ALL=C sort` puts them: byte order, not a locale's, so upper case
+/// comes before lower, and after a common `a` come ` `, `-`, `.`, `/` and
+/// `0` in that order, which puts the files in a directory between files
+/// beside it.
+const fileSet = [
+  ('Z.txt', 'last in a locale sort, first in byte order'),
+  ('[x]~', 'brackets and tilde'),
+  ('a b', 'a space'),
+  ('a-b', 'a dash'),
+  ('a.b', 'a dot'),
+  ('a/b', 'in a directory'),
+  ('a/c/d', 'deeper'),
+  ('a0', ''),
+];
+
+/// What the recipe in [FileSetId]'s comment gives for [fileSet], made by
+/// the shell rather than typed, the same on macOS and on Linux (GNU `find`,
+/// `sort` and `xargs`, Perl's `shasum`). To make it again:
+///
+/// ```sh
+/// mkdir -p set/a/c && cd set
+/// printf 'last in a locale sort, first in byte order' > Z.txt
+/// printf 'brackets and tilde' > '[x]~'
+/// printf 'a space' > 'a b'
+/// printf 'a dash' > a-b
+/// printf 'a dot' > a.b
+/// printf 'in a directory' > a/b
+/// printf 'deeper' > a/c/d
+/// : > a0
+/// find . -type f -print0 | LC_ALL=C sort -z |
+///   xargs -0 shasum -a 256 | shasum -a 256
+/// ```
+const fileSetName =
+    '67a9c3e5fe20a49e76b49321e74845018794e4d6bc959b8fada6dc83ac009995';
 
 /// NIST CAVP SHA-256 Monte Carlo test (SHAVS, `SHA256Monte.rsp`, CAVS 11.1,
 /// from https://csrc.nist.gov/CSRC/media/Projects/Cryptographic-Algorithm-Validation-Program/documents/shs/shabytetestvectors.zip):

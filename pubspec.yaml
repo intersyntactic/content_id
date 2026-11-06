@@ -2,7 +2,7 @@ name: is_content_id
 description: >-
   Content addresses: names made by hashing bytes with sha256, as types, and
   the sha256 they are made with. No dependencies, and no dart:io.
-version: 0.1.0
+version: 0.2.0
 repository: https://github.com/intersyntactic/content_id
 
 environment:

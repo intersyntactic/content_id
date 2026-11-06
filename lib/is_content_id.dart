@@ -3,11 +3,13 @@
 /// An [ObjectId] names bytes: it is their sha256. It is made only here: by
 /// [ObjectId.of], from the bytes it hashes, or where a name is read back, by
 /// [ObjectId.parse] from hex or [ObjectId.fromDigest] from its 32 bytes. So
-/// code holding one never asks whether it is well formed. Other kinds of
-/// name extend [Sha256Name], and two kinds with the same bytes are never
-/// equal while each keeps the `==` and `runtimeType` it inherits. Classes,
-/// not extension types, since a `String` can be cast to an extension type
-/// and skip every check.
+/// code holding one never asks whether it is well formed. A [FileSetId]
+/// names a set of files, each a [ListedPath] and the [ObjectId] of its
+/// bytes, by the listing `shasum -a 256` prints for them, so the shell can
+/// check it. Other kinds of name extend [Sha256Name], and two kinds with the
+/// same bytes are never equal while each keeps the `==` and `runtimeType` it
+/// inherits. Classes, not extension types, since a `String` can be cast to
+/// an extension type and skip every check.
 ///
 /// The [sha256] every name is made with is here too, as FIPS 180-4 defines
 /// it. This package imports only `dart:typed_data` and touches no file, so
@@ -100,6 +102,77 @@ final class ObjectId extends Sha256Name {
   static ObjectId? fromDigest(Uint8List digest) =>
       digest.length == 32 ? ObjectId._(digest) : null;
 }
+
+/// The name of a set of files: the sha256 of the listing `shasum -a 256`
+/// prints for them, a line `<id>  ./<path>` for each, in the byte order of
+/// their paths. So a person can compute it without this code, from the
+/// set's root:
+///
+///     find . -type f -print0 | LC_ALL=C sort -z |
+///       xargs -0 shasum -a 256 | shasum -a 256
+///
+/// with a test such as `-name '*.dart'` after `-type f` when only some files
+/// are in the set. Which files those are is the caller's to say: this names
+/// the set it is given, and reads no file.
+final class FileSetId extends Sha256Name {
+  FileSetId._(super.digest);
+
+  /// The id of [files]: each file's path, mapped to the id of its bytes, so
+  /// a path is in the set once. Null when there are none, since the recipe
+  /// gives the empty set two names: on macOS `xargs` does not run `shasum`
+  /// when it is given no paths, and on Linux it runs it once, on no input.
+  static FileSetId? of(Map<ListedPath, ObjectId> files) {
+    if (files.isEmpty) return null;
+    final sorted = files.entries.toList()
+      ..sort((a, b) => a.key._path.compareTo(b.key._path));
+    final listing = [
+      for (final MapEntry(:key, :value) in sorted) '${value.hex}  ./$key\n',
+    ].join();
+    // Every path is ASCII, so the listing's code units are its bytes.
+    return FileSetId._(sha256(Uint8List.fromList(listing.codeUnits)));
+  }
+
+  /// [s] as an id, read back from text; null unless it is a sha256 in
+  /// lower-case hex.
+  static FileSetId? parse(String s) => switch (Sha256Name.digestOfHex(s)) {
+    final d? => FileSetId._(d),
+    null => null,
+  };
+
+  /// [digest] as an id, read back from bytes; null unless it is 32 bytes.
+  static FileSetId? fromDigest(Uint8List digest) =>
+      digest.length == 32 ? FileSetId._(digest) : null;
+}
+
+/// A file's path in a set a [FileSetId] names, from the set's root, as
+/// `find` prints it but without the `./` it starts with: parts joined by
+/// `/`, none of them empty, `.` or `..`. Each part is printable ASCII with no
+/// backslash: `shasum` escapes a backslash or a newline, and in ASCII a
+/// path's code units are its bytes, so sorting paths as strings sorts them
+/// as `sort` does.
+final class ListedPath {
+  ListedPath._(this._path);
+
+  final String _path;
+
+  /// [s] as a path; null unless it is one `find` could print.
+  static ListedPath? parse(String s) =>
+      s.split('/').every((n) => n != '.' && n != '..' && _part.hasMatch(n))
+      ? ListedPath._(s)
+      : null;
+
+  @override
+  bool operator ==(Object other) => other is ListedPath && other._path == _path;
+
+  @override
+  int get hashCode => _path.hashCode;
+
+  @override
+  String toString() => _path;
+}
+
+/// A part of a [ListedPath]: printable ASCII, no `/` or backslash.
+final _part = RegExp(r'^[\x20-\x2e\x30-\x5b\x5d-\x7e]+$');
 
 /// The sha256 of [message], as FIPS 180-4 defines it. Words live in
 /// `Uint32List`s, which keep only the low 32 bits of what is stored; the
